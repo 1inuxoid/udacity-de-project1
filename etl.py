@@ -8,27 +8,12 @@ import csv
 from io import StringIO
 
 
-def psql_batch_insert(table, conn, keys, data_iter):
-    # gets a DBAPI connection that can provide a cursor
-    dbapi_conn = conn.connection
-    with dbapi_conn.cursor() as cur:
-        s_buf = StringIO()
-        writer = csv.writer(s_buf)
-        writer.writerows(data_iter)
-        s_buf.seek(0)
-
-        columns = ', '.join('"{}"'.format(k) for k in keys)
-        if table.schema:
-            table_name = '{}.{}'.format(table.schema, table.name)
-        else:
-            table_name = table.name
-
-        sql = 'COPY {} ({}) FROM STDIN WITH CSV'.format(
-            table_name, columns)
-        cur.copy_expert(sql=sql, file=s_buf)
-
-
 def process_song_file(cur, filepath):
+    """
+    Processes data from song file and populates songs and artists tables
+    :param cur: connection cursor
+    :param filepath: path to JSON file to load
+    """
     # open song file
     df = pd.read_json(filepath, lines=True)
 
@@ -46,6 +31,12 @@ def process_song_file(cur, filepath):
 
 
 def get_song_and_artist(row, cur):
+    """
+    Looks up song_id and artist_id columns for songplay table using log data
+    :param row: row from log data frame
+    :param cur: connection cursor used for querying
+    :return: tuple (song_id, artist_id) which can be None if not found
+    """
     cur.execute(song_select, (row.song, row.artist, row.length))
     results = cur.fetchone()
 
@@ -58,6 +49,12 @@ def get_song_and_artist(row, cur):
 
 
 def process_log_file(cur, filepath):
+    """
+    - Processes data from files and persists it into times, users and songplays tables
+    - Uses prepared statements in batch execution mode to speedup table updates
+    :param cur: connection cursor
+    :param filepath: path to JSON file to load
+    """
     # open log file
     df = pd.read_json(filepath, lines=True)
 
