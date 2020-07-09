@@ -9,7 +9,7 @@ time_table_drop = "DROP TABLE IF EXISTS time"
 # CREATE TABLES
 
 songplay_table_create = ("""CREATE TABLE songplays (
-    songplay_id int PRIMARY KEY,
+    songplay_id serial PRIMARY KEY,
     start_time timestamp NOT NULL,
     user_id int NOT NULL,
     level varchar NOT NULL,
@@ -63,17 +63,19 @@ songplay_seq_create = ("""CREATE SEQUENCE songplay_seq
 # INSERT RECORDS
 
 songplay_table_insert = ("""INSERT INTO songplays 
-    (songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
-    VALUES (nextval('songplay_seq'), %s, %s, %s, %s, %s, %s, %s, %s);
+    (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
 """)
 
 user_table_insert = ("""INSERT INTO users(user_id, first_name, last_name, gender, level)
     VALUES (%s, %s, %s, %s, %s)
-    ON CONFLICT DO NOTHING;
+    ON CONFLICT(user_id) DO UPDATE
+        SET level = excluded.level;
 """)
 
 song_table_insert = ("""INSERT INTO songs(song_id, title, artist_id, year, duration)
-    VALUES (%s, %s, %s, %s, %s);
+    VALUES (%s, %s, %s, %s, %s)
+    ON CONFLICT DO NOTHING;
 """)
 
 artist_table_insert = ("""INSERT INTO artists(artist_id, name, location, latitude, longitude)
@@ -82,7 +84,7 @@ artist_table_insert = ("""INSERT INTO artists(artist_id, name, location, latitud
         SET name = excluded.name,
             location = excluded.location,
             latitude = excluded.latitude,
-            longitude = excluded.longitude;
+            longitude = excluded.longitude
 """)
 
 
