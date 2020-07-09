@@ -111,6 +111,13 @@ def process_log_file(cur, filepath):
 
 
 def process_data(cur, conn, filepath, func):
+    """
+    Processes all JSON files in the given folder using the func function
+    :param cur: connection cursor
+    :param conn: connection to database
+    :param filepath: path to files that have to be processed
+    :param func: function that will be applied to each file, see process_song_fie, process_log_file
+    """
     # get all files matching extension from directory
     all_files = []
     for root, dirs, files in os.walk(filepath):
